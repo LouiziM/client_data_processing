@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from flask_cors import cross_origin
 from flask_sqlalchemy import SQLAlchemy
+from collections import defaultdict
 
 
 def create_customers_blueprint(db):
@@ -80,7 +81,33 @@ def create_customers_blueprint(db):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
+    @customers_blueprint.route('/customer-count-by-region', methods=['GET'])
+    def get_customer_count_by_region():
+        try:
+            region_counts = defaultdict(int)
+            customers = Customer.query.all()
+            for customer in customers:
+                region = customer.REGION
+                if region is not None:
+                    region_counts[region] += 1
 
+            region_ids = {
+                "Dakhla-Oued Eddahab": 11,
+                "Tanger-Tetouan-Hoceima": 3,
+                "Marrakech-Safi": 12,
+                "Daraa-Tafilelt": 8,
+                "Guelmim-Oued Noun": 10,
+                "Fes-Meknes": 4,
+                "Oriental": 2,
+                "Casablanca-Settat": 6,
+                "Souss Massa": 9,
+                "Laayoune-Saguia Hamra": 1,
+                "Rabat-Sale-Kenitra": 5,
+                "Beni Mellal-Khenifra": 7
+            }
+            result = [{"id": region_ids[region], "value": count} for region, count in region_counts.items()]
 
-
+            return jsonify(result), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
     return customers_blueprint
